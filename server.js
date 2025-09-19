@@ -1,13 +1,15 @@
-
-// Simple Express Server
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-    res.send('Hello World! Your Express app is running on Render.');
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+{
+  "name": "my-express-app",
+  "version": "1.0.0",
+  "description": "Express + MongoDB app for CGinsta",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0"
+  }
+}
