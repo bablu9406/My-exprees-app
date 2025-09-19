@@ -10,7 +10,9 @@ app.use(express.json());
 
 // MongoDB connection string from Environment Variable
 const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
-if (!MONGO_URI) {
+if (!MONGO_URI) 
+console.log("MONGO_URI from env:", MONGO_URI);
+{
   console.error("❌ No MongoDB connection string found in environment variables!");
 }
 
