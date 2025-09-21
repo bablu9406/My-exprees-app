@@ -9,16 +9,16 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection string from Environment Variable
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
-if (!MONGO_URI) 
-console.log("MONGO_URI from env:", MONGO_URI);
-{
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
   console.error("❌ No MongoDB connection string found in environment variables!");
+  process.exit(1);
 }
 
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
 .then(() => console.log("✅ MongoDB connected"))
 .catch(err => console.error("❌ MongoDB connection error:", err.message));
@@ -26,14 +26,14 @@ mongoose.connect(MONGO_URI, {
 // Simple User schema + model
 const userSchema = new mongoose.Schema({
   name: String,
-  email: String
+  email: String,
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 
 // Test Route
 app.get('/', (req, res) => {
-  res.send("🚀 API is working!");
+  res.send("✅ API is working!");
 });
 
 // Get all users
