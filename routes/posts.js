@@ -1,7 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const Post = require('../models/Post');
-const User = require('../models/User');
+const user = require('../models/user');
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
     // pagination optional: ?page=1&limit=10
     const page = Math.max(1, parseInt(req.query.page || '1'));
     const limit = Math.max(1, parseInt(req.query.limit || '20'));
-    const posts = await Post.find()
+    const posts = await post.find()
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
@@ -48,7 +48,7 @@ router.get('/:id', async (req, res) => {
 // Like/Unlike
 router.post('/:id/like', auth, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
     const idx = post.likes.indexOf(req.user._id);
     if (idx === -1) post.likes.push(req.user._id);
@@ -66,7 +66,7 @@ router.post('/:id/comment', auth, async (req, res) => {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'comment text required' });
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post) return res.status(404).json({ error: 'post not found' });
     post.comments.push({ user: req.user._id, text });
     await post.save();
     res.json(post.comments);
@@ -78,7 +78,7 @@ router.post('/:id/comment', auth, async (req, res) => {
 // Delete post (only owner)
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
     if (post.user.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Not authorized' });
     await post.remove();
