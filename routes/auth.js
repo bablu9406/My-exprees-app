@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/user');   // ✅ fixed
 
 const router = express.Router();
 
@@ -30,8 +30,10 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+
     const ok = await bcrypt.compare(password, user.password || '');
     if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -43,4 +45,3 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
-
