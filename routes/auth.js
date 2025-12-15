@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');  // ✅ सही import
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -13,13 +13,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'name, email, password required' });
     }
 
-    const exists = await User.findOne({ email });   // ✅ fixed
+    const exists = await User.findOne({ email });
     if (exists) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashed }); // ✅ fixed
+    const user = new User({ name, email, password: hashed });
     await user.save();
 
     const token = jwt.sign(
@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'email and password required' });
     }
 
-    const user = await User.findOne({ email });   // ✅ fixed
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
