@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const postRoutes = require("./routes/posts");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 // 🔥 THIS LINE IS VERY IMPORTANT
 app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
