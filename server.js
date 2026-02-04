@@ -1,32 +1,36 @@
+require("dotenv").config();
+
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Routes
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
+
+// Test Route
 app.get("/", (req, res) => {
-  res.send("Backend running ✅");
+  res.send("CG API Running 🚀");
 });
 
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
+// MongoDB + Server Start
+const PORT = process.env.PORT || 5000;
 
-  if (email === "test@gmail.com" && password === "123456") {
-    return res.json({
-      token: "dummy-token-123",
-      user: {
-        email
-      }
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB Connected ✅");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
-  }
-
-  res.status(401).json({ message: "Invalid credentials" });
-});
-
-const PORT = 5000;
-app.listen(5000, "0.0.0.0", () => {
-  console.log("Server running on port 5000");
-});
-
+  })
+  .catch((err) => {
+    console.log("MongoDB Error ❌", err);
+  });
