@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
+// REGISTER
 router.post("/register", (req, res) => {
-  res.send("register ok");
+  res.json({ message: "Register OK" });
 });
 
+// LOGIN
 router.post("/login", (req, res) => {
-  res.send("login ok");
+  res.json({ message: "Login OK" });
 });
 
 module.exports = router;
