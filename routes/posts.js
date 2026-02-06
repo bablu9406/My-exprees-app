@@ -1,30 +1,32 @@
 const express = require("express");
+const router = express.Router();
+
 const auth = require("../middleware/auth");
 const Post = require("../models/Post");
 
-const router = express.Router();
-
-/* CREATE POST */
+/* ================= CREATE POST ================= */
 router.post("/", auth, async (req, res) => {
   try {
-    if (!req.body.caption) {
+    const { caption, image } = req.body;
+
+    if (!caption) {
       return res.status(400).json({ error: "Caption is required" });
     }
 
-    const post = await Post.create({
+    const newPost = await Post.create({
       user: req.user._id,
-      caption: req.body.caption,
-      image: req.body.image || null,
+      caption,
+      image: image || null,
       createdAt: new Date(),
     });
 
-    res.status(201).json(post);
+    res.status(201).json(newPost);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-/* GET FEED */
+/* ================= GET ALL POSTS (FEED) ================= */
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find()
