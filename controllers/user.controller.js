@@ -1,8 +1,8 @@
 const User = require("../models/User");
-import Post from "../models/Post.js";
+const Post = require("../models/Post");
 
 /* FOLLOW / UNFOLLOW */
-export const toggleFollow = async (req, res) => {
+exports.toggleFollow = async (req, res) => {
   const user = await User.findById(req.user.id);
   const target = await User.findById(req.params.id);
 
@@ -23,7 +23,7 @@ export const toggleFollow = async (req, res) => {
 };
 
 /* PROFILE */
-export const getProfile = async (req, res) => {
+exports.getProfile = async (req, res) => {
   const user = await User.findById(req.params.id)
     .select("-password")
     .populate("followers following", "name");
