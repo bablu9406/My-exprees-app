@@ -6,6 +6,11 @@ exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    const exist = await User.findOne({ email });
+    if (exist) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
     const user = await User.create({
       username,
       email,
@@ -13,10 +18,12 @@ exports.register = async (req, res) => {
     });
 
     res.json({ message: "Register OK" });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // LOGIN
 exports.login = async (req, res) => {
