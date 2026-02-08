@@ -1,23 +1,50 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 // REGISTER
 exports.register = async (req, res) => {
-  res.json({ message: "Register OK" });
+  try {
+    const { username, email, password } = req.body;
+
+    const user = await User.create({
+      username,
+      email,
+      password
+    });
+
+    res.json({ message: "Register OK" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // LOGIN
 exports.login = async (req, res) => {
   try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    // Password check simple (hash नहीं अभी)
+    if (user.password !== password) {
+      return res.status(400).json({ error: "Wrong password" });
+    }
+
     const token = jwt.sign(
-      { id: "123" }, // बाद में real user id आएगा
+      { id: user._id },   // ✅ REAL USER ID
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
 
     res.json({
       message: "Login OK",
-      token,
+      token
     });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
