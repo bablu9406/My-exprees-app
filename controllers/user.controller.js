@@ -1,34 +1,56 @@
 const User = require("../models/User");
-const Post = require("../models/Post");
 
-/* FOLLOW / UNFOLLOW */
-exports.toggleFollow = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  const target = await User.findById(req.params.id);
+exports.followUser = async (req, res) => {
+  try {
+    const userToFollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user.id);
 
-  const isFollowing = user.following.includes(target.id);
+    if (!userToFollow) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  if (isFollowing) {
-    user.following.pull(target.id);
-    target.followers.pull(user.id);
-  } else {
-    user.following.push(target.id);
-    target.followers.push(user.id);
+    if (currentUser.following.includes(userToFollow.id)) {
+      return res.status(400).json({ message: "Already following" });
+    }
+
+    currentUser.following.push(userToFollow.id);
+    userToFollow.followers.push(currentUser.id);
+
+    await currentUser.save();
+    await userToFollow.save();
+
+    res.json({ message: "Followed successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  await user.save();
-  await target.save();
-
-  res.json({ following: !isFollowing });
 };
 
-/* PROFILE */
+exports.unfollowUser = async (req, res) => {
+  try {
+    const userToUnfollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user.id);
+
+    currentUser.following.pull(userToUnfollow.id);
+    userToUnfollow.followers.pull(currentUser.id);
+
+    await currentUser.save();
+    await userToUnfollow.save();
+
+    res.json({ message: "Unfollowed successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET PROFILE
 exports.getProfile = async (req, res) => {
-  const user = await User.findById(req.params.id)
-    .select("-password")
-    .populate("followers following", "name");
+  try {
+    const user = await User.findById(req.params.id)
+      .populate("followers", "username")
+      .populate("following", "username");
 
-  const posts = await Post.find({ user: req.params.id });
-
-  res.json({ user, posts });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
