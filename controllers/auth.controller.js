@@ -6,6 +6,9 @@ const jwt = require("jsonwebtoken");
 exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+ if (!password || password.length < 6) {
+return res.status(400).json({ error: "Password must be at least 6 characters" });
+}
 
     const exist = await User.findOne({ email });
     if (exist) {
@@ -44,7 +47,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     res.json({
@@ -54,4 +57,4 @@ exports.login = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
+  };

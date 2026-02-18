@@ -26,21 +26,31 @@ const userSchema = new mongoose.Schema(
     default: ""
   },
 
-  followers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }
-  ],
+  followers: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+}],
 
   following: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     }
-  ]
-},
-{ timestamps: true }
-);
+  ],
+  savedPosts: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Post"
+}],
+
+subscribers: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+}],
+subscribedTo: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+}],
+
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);
