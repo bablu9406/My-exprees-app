@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema(
   ref: "Post"
 }],
 
+role: {
+  type: String,
+  enum: ["user", "admin"],
+  default: "user",
+},
+
 subscribers: [{
   type: mongoose.Schema.Types.ObjectId,
   ref: "User"

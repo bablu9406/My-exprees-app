@@ -204,15 +204,35 @@ exports.getSubscribedPosts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// ================= FEED =================
 exports.getFeed = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const Post = require("../models/Post");
+
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "username profilePic");
+
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ================= SEARCH =================
+exports.searchPost = async (req, res) => {
+  try {
+    const Post = require("../models/Post");
+
+    const { q } = req.query;
+
+    if (!q) {
+      return res.json([]);
+    }
 
     const posts = await Post.find({
-      user: { $in: [...user.following, req.user._id] }
-    })
-      .populate("user", "username")
-      .sort({ createdAt: -1 });
+      caption: { $regex: q, $options: "i" }
+    }).populate("user", "username profilePic");
 
     res.json(posts);
   } catch (err) {
