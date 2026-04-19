@@ -3,8 +3,8 @@ const router = express.Router();
 
 // ✅ सही
 const Withdraw = require("../models/Withdraw")
-const Wallet = require("../models/wallet");
-const History = require("../models/history");
+const Wallet = require("../models/Wallet")
+const History = require("../models/history")
 
 const { auth } = require("../middleware/auth");
 const { admin } = require("../middleware/admin");
