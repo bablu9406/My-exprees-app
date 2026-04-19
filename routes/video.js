@@ -4,7 +4,7 @@ const router = express.Router()
 const upload = require("../utils/multer")
 const { auth } = require("../middleware/auth")
 
-const Video = require("../models/Video")
+const Video = require("../models/video")
 const videoController = require("../controllers/video.controller")
 
 const generateThumbnail = require("../utils/thumbnail")

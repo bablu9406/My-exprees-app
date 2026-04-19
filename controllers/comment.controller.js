@@ -1,7 +1,7 @@
 const Comment = require("../models/Comment")
 const Notification = require("../models/Notification")
 const Post = require("../models/Post")
-const Video = require("../models/Video")
+const Video = require("../models/video")
 const contentFilter = require("../middleware/contentFilter")
 
 const { io } = require("../server")
