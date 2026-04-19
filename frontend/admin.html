@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #333;
+      text-align: center;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin: 2px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .approve {
+      background: green;
+      color: white;
+    }
+
+    .reject {
+      background: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<h1>💰 Admin Withdraw Panel</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="data"></tbody>
+</table>
+
+<script>
+const API = "http://localhost:5000/api/withdraw";
+
+async function loadData() {
+  const res = await fetch(API + "/all");
+  const data = await res.json();
+
+  const table = document.getElementById("data");
+  table.innerHTML = "";
+
+  data.forEach(w => {
+    table.innerHTML += `
+      <tr>
+        <td>${w.user}</td>
+        <td>₹${w.amount}</td>
+        <td>${w.status}</td>
+        <td>
+          ${
+            w.status === "pending"
+              ? `
+                <button class="approve" onclick="approve('${w._id}')">Approve</button>
+                <button class="reject" onclick="reject('${w._id}')">Reject</button>
+              `
+              : "Done"
+          }
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function approve(id) {
+  await fetch(API + "/approve/" + id, { method: "PUT" });
+  loadData();
+}
+
+async function reject(id) {
+  await fetch(API + "/reject/" + id, { method: "PUT" });
+  loadData();
+}
+
+loadData();
+</script>
+
+</body>
+</html>

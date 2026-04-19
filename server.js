@@ -1,83 +1,215 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const http = require("http");
-const { Server } = require("socket.io");
+require("dotenv").config()
 
-const app = express();
+const onlineUsers = new Map()
+const express = require("express")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const http = require("http")
+const { Server } = require("socket.io")
+const helmet = require("helmet")
+const compression = require("compression")
+const morgan = require("morgan")
+const rateLimit = require("express-rate-limit")
 
-/* ---------------- BASIC MIDDLEWARE ---------------- */
+// MODELS
+const Message = require("./models/Message")
+const GroupMessage = require("./models/GroupMessage")
+const Notification = require("./models/Notification") // ✅ FIX
 
-app.use(cors());
-app.use(express.json());
+// ROUTES
+const adRoutes = require("./routes/ads")
+const walletRoutes = require("./routes/wallet")
+const withdrawRoutes = require("./routes/withdraw")
+const referralRoutes = require("./routes/referral")
+const leaderboardRoutes = require("./routes/leaderboard")
+const analyticsRoutes = require("./routes/analytics")
+const walletTestRoutes = require("./routes/walletTest")
+const historyRoutes = require("./routes/history")
+const adminRoutes = require("./routes/admin")
+const paymentRoutes = require("./routes/payment")
+const videoRoutes = require("./routes/video")
 
-/* ---------------- CREATE HTTP SERVER ---------------- */
+const app = express()
 
-const server = http.createServer(app);
+/* ================= SECURITY ================= */
 
-/* ---------------- SOCKET.IO SETUP ---------------- */
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+})
 
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
+app.use(helmet())
+app.use(compression())
+app.use(morgan("dev"))
+app.use(cors({ origin: "*" }))
+app.use(express.json())
+app.use(limiter)
 
-let onlineUsers = {};
+/* ================= ROUTES ================= */
 
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+app.use("/api/ads", adRoutes)
+app.use("/api/wallet", walletRoutes)
+app.use("/api/withdraw", withdrawRoutes)
+app.use("/api/referral", referralRoutes)
+app.use("/api/leaderboard", leaderboardRoutes)
+app.use("/api/analytics", analyticsRoutes)
+app.use("/api/admin", adminRoutes)
+app.use("/api/payment", paymentRoutes)
+app.use("/api/test-wallet", walletTestRoutes)
+app.use("/api/history", historyRoutes)
+app.use("/api/video", videoRoutes)
 
-  // Frontend user connect करेगा
-  socket.on("addUser", (userId) => {
-    onlineUsers[userId] = socket.id;
-  });
+app.use("/api/auth", require("./routes/auth"))
+app.use("/api/users", require("./routes/users"))
+app.use("/api/posts", require("./routes/posts"))
+app.use("/api/stories", require("./routes/stories"))
+app.use("/api/comments", require("./routes/comments"))
+app.use("/api/messages", require("./routes/messages"))
+app.use("/api/notifications", require("./routes/notifications"))
+app.use("/api/groups", require("./routes/groups"))
+app.use("/api/uploads", require("./routes/uploads"))
+app.use("/api/reports", require("./routes/reports"))
+app.use("/api/live", require("./routes/live"))
+app.use("/api/subscribe", require("./routes/subscribe"))
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
+app.use(express.static("frontend"))
 
-    for (let userId in onlineUsers) {
-      if (onlineUsers[userId] === socket.id) {
-        delete onlineUsers[userId];
-      }
-    }
-  });
-});
-
-/* ----------- SOCKET ACCESSIBLE IN CONTROLLERS ----------- */
-
-app.set("io", io);
-app.set("onlineUsers", onlineUsers);
-
-/* ---------------- MONGODB ---------------- */
+/* ================= MONGODB ================= */
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("Mongo Connected"))
-  .catch((err) => console.log(err));
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log("Mongo Error:", err))
 
-/* ---------------- ROUTES ---------------- */
+/* ================= HTTP SERVER ================= */
 
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/posts", require("./routes/posts"));
-app.use("/api/users", require("./routes/users"));
-app.use("/api/comments", require("./routes/comments"));
-app.use("/api/notifications", require("./routes/notifications"));
-app.use("/api/stories", require("./routes/stories"));
-app.use("/api/messages", require("./routes/messages"));
+const server = http.createServer(app)
 
-/* ---------------- GLOBAL ERROR ---------------- */
+const io = new Server(server, {
+  cors: { origin: "*" }
+})
 
-app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err);
-  res.status(500).json({ error: err.message });
-});
+/* ================= SOCKET ================= */
 
-/* ---------------- START SERVER ---------------- */
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id)
 
-const PORT = process.env.PORT || 5000;
+  // store users
+  socket.on("join", (userId) => {
+    onlineUsers.set(userId, socket.id)
+    io.emit("online-users", Array.from(onlineUsers.keys()))
+  })
+
+  // ✅ DISCONNECT FIX (ADD THIS)
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id)
+
+    for (let [userId, socketId] of onlineUsers) {
+      if (socketId === socket.id) {
+        onlineUsers.delete(userId)
+        break
+      }
+    }
+
+    io.emit("online-users", Array.from(onlineUsers.keys()))
+  })
+
+})
+
+  /* ===== CHAT MESSAGE ===== */
+  socket.on("chat-message", async (data) => {
+    try {
+      if (!data?.sender || !data?.toUserId || !data?.text) return
+
+      const isOnline = onlineUsers.has(data.toUserId)
+
+      const saved = await Message.create({
+        sender: data.sender,
+        receiver: data.toUserId,
+        text: data.text,
+        status: isOnline ? "delivered" : "sent"
+      })
+
+      const target = onlineUsers.get(data.toUserId)
+
+      if (target) {
+        io.to(target).emit("chat-message", saved)
+      }
+
+      socket.emit("chat-message", saved)
+
+      // 🔔 notification save
+      await Notification.create({
+        user: data.toUserId,
+        type: "message",
+        message: data.text,
+        from: data.sender
+      })
+
+    } catch (err) {
+      console.log("DB Error:", err)
+    }
+  })
+
+  /* ===== TYPING ===== */
+  socket.on("typing", ({ fromUserId, toUserId }) => {
+    const target = onlineUsers.get(toUserId)
+    if (target) io.to(target).emit("typing", { fromUserId })
+  })
+
+  socket.on("stop-typing", ({ fromUserId, toUserId }) => {
+    const target = onlineUsers.get(toUserId)
+    if (target) io.to(target).emit("stop-typing", { fromUserId })
+  })
+
+  /* ===== SEEN MESSAGE (FIXED) ===== */
+  socket.on("seen", async ({ messageId }) => {
+    await Message.findByIdAndUpdate(messageId, { seen: true })
+  })
+
+  /* ===== NOTIFICATION ===== */
+  socket.on("new-notification", (data) => {
+    const target = onlineUsers.get(data.to)
+    if (target) {
+      io.to(target).emit("notification", data)
+    }
+  })
+
+  /* ===== GROUP MESSAGE ===== */
+  socket.on("group-message", async (data) => {
+    const saved = await GroupMessage.create({
+      group: data.groupId,
+      sender: data.sender,
+      text: data.text,
+      voice: data.voice,
+      image: data.image,
+      video: data.video
+    })
+
+    io.emit("group-message", saved)
+  })
+
+  /* ===== DISCONNECT ===== */
+  socket.on("disconnect", () => {
+    for (const [userId, id] of onlineUsers.entries()) {
+      if (id === socket.id) {
+        onlineUsers.delete(userId)
+        break
+      }
+    }
+
+    io.emit("online-users", Array.from(onlineUsers.keys()))
+    console.log("User Disconnected:", socket.id)
+  })
+})
+
+/* ================= START SERVER ================= */
+
+const PORT = process.env.PORT || 5000
 
 server.listen(PORT, () => {
-  console.log("Server Running on " + PORT);
-});
+  console.log("Server running on port", PORT)
+})
+
+/* ✅ EXPORT (IMPORTANT) */
+module.exports = { io }

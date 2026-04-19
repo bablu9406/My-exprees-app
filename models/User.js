@@ -15,7 +15,10 @@ const userSchema = new mongoose.Schema(
     type: String,
     required: true
   },
-
+  referralCode: {
+  type: String,
+  unique: true
+},
   profilePic: {
     type: String,
     default: ""
@@ -48,6 +51,29 @@ role: {
   default: "user",
 },
 
+collections:[
+ {
+  name:String,
+  posts:[
+   {
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Post"
+   }
+  ]
+ }
+],
+
+interests: [
+  {
+    type: String
+  }
+],
+
+referredBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+},
+
 subscribers: [{
   type: mongoose.Schema.Types.ObjectId,
   ref: "User"
@@ -57,6 +83,13 @@ subscribedTo: [{
   ref: "User"
 }],
 
+subscriberCount: {
+  type: Number,
+  default: 0
+}
+
 }, { timestamps: true });
 
-module.exports = mongoose.model("User", userSchema);
+module.exports =
+  mongoose.models.User ||
+  mongoose.model("User", userSchema);

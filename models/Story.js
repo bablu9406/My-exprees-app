@@ -1,28 +1,35 @@
 const mongoose = require("mongoose");
 
-const storySchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    media: {
-      type: String,
-      required: true,
-    },
-    views: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    expiresAt: {
-      type: Date,
-      default: () => Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    },
+const storySchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-  { timestamps: true }
-);
+
+  media: {
+    type: String,
+    required: true
+  },
+
+  type: {
+    type: String,
+    enum: ["image", "video"],
+    default: "image"
+  },
+
+  viewers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }
+  ],
+
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 86400 // 24 hours
+  }
+});
 
 module.exports = mongoose.model("Story", storySchema);

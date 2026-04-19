@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+
+<body>
+
+<h2>🔥 User Dashboard</h2>
+
+<!-- WALLET -->
+<h3>💰 Wallet</h3>
+<p id="balance">Balance: ₹ 0</p>
+<p id="earned">Total Earned: ₹ 0</p>
+<button onclick="loadWallet()">Refresh Wallet</button>
+
+<hr>
+
+<!-- ADD MONEY -->
+<h3>💳 Add Money</h3>
+<input type="number" id="amount" placeholder="Enter amount" />
+<button onclick="payNow()">Pay Now</button>
+
+<hr>
+
+<!-- WITHDRAW -->
+<h3>💸 Withdraw</h3>
+<input type="number" id="withdrawAmount" placeholder="Enter withdraw amount" />
+<button onclick="withdraw()">Withdraw</button>
+
+<hr>
+
+<!-- HISTORY -->
+<h3>📜 History</h3>
+<ul id="history"></ul>
+
+<!-- Razorpay -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+
+const userId = localStorage.getItem("userId") || "test123"; // temp fallback
+
+// ================= WALLET =================
+async function loadWallet() {
+  const res = await fetch("http://localhost:5000/api/test-wallet");
+  const data = await res.json();
+
+  document.getElementById("balance").innerText = "Balance: ₹ " + data.balance;
+  document.getElementById("earned").innerText = "Total Earned: ₹ " + data.totalEarned;
+}
+
+// ================= PAYMENT =================
+async function payNow() {
+  const amount = document.getElementById("amount").value;
+
+  const res = await fetch("http://localhost:5000/api/payment/create-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  });
+
+  const data = await res.json();
+  const order = data.order;
+
+  const options = {
+    key: "rzp_test_xxxxxxxx", // replace with your key
+    amount: order.amount,
+    currency: order.currency,
+    order_id: order.id,
+
+    handler: async function (response) {
+
+      await fetch("http://localhost:5000/api/payment/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...response,
+          userId,
+          amount
+        })
+      });
+
+      alert("Payment success 💰");
+      loadWallet();
+      loadHistory();
+    }
+  };
+
+  new Razorpay(options).open();
+}
+
+// ================= WITHDRAW =================
+async function withdraw() {
+  const amount = document.getElementById("withdrawAmount").value;
+
+  const res = await fetch("http://localhost:5000/api/withdraw/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+
+  loadWallet();
+  loadHistory();
+}
+
+// ================= HISTORY =================
+async function loadHistory() {
+  const res = await fetch(`http://localhost:5000/api/history/${userId}`);
+  const data = await res.json();
+
+  const list = document.getElementById("history");
+  list.innerHTML = "";
+
+  data.forEach(item => {
+    const li = document.createElement("li");
+    li.innerText = `₹ ${item.amount} - ${item.status}`;
+    list.appendChild(li);
+  });
+}
+
+// ================= AUTO LOAD =================
+loadWallet();
+loadHistory();
+
+</script>
+
+</body>
+</html>

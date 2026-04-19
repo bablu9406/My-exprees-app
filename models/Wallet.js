@@ -1,0 +1,29 @@
+const mongoose = require("mongoose");
+
+const walletSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      unique: true,
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    totalEarned: {
+      type: Number,
+      default: 0,
+    },
+    totalWithdrawn: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true }
+);
+
+// ✅ FIX (IMPORTANT)
+module.exports =
+  mongoose.models.Wallet ||
+  mongoose.model("Wallet", walletSchema);

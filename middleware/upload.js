@@ -4,7 +4,7 @@ const cloudinary = require("../config/cloudinary");
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => {
+  params: (req, file) => {   // ❌ async हटाया
     let resourceType = "image";
 
     if (file.mimetype.startsWith("video")) {

@@ -1,54 +1,71 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth");
+
+const { auth } = require("../middleware/auth");
 const upload = require("../middleware/upload");
 
-const {
-  createPost,
-  getPosts,
-  likePost,
-  unlikePost,
-  deletePost,
-  updatePost,
-  getShorts,
-  getSinglePost,
-  getSubscribedPosts,
-  getFeed,
-  searchPost
-} = require("../controllers/post.controller");
+const postController = require("../controllers/post.controller");
 
-// CREATE POST
-router.post("/", auth, upload.single("file"), createPost);
 
-// GET SHORTS
-router.get("/shorts", getShorts);
+// =========================
+// 🔥 FEED & SEARCH (TOP)
+// =========================
 
-// GET ALL POSTS
-router.get("/", getPosts);
+router.get("/feed", auth, postController.getFeed);
+router.get("/search", auth, postController.searchPost);
+router.get("/explore", auth, postController.getExplore);
 
-// GET SINGLE POST
-router.get("/:id", getSinglePost);
 
-// UPDATE POST
-router.put("/edit/:id", auth, updatePost);
+// =========================
+// 🎬 REELS
+// =========================
 
-// LIKE / UNLIKE
-router.put("/like/:id", auth, likePost);
-router.put("/unlike/:id", auth, unlikePost);
+router.get("/reels", auth, postController.getReels);
+router.get("/reels/trending", auth, postController.getTrendingReels);
 
-// DELETE
-router.delete("/:id", auth, deletePost);
 
-// UPDATE WITH IMAGE
-router.put("/:id", auth, upload.single("image"), updatePost);
+// =========================
+// 📝 POSTS
+// =========================
 
-// SUBSCRIBED POSTS
-router.get("/subscribed", auth, getSubscribedPosts);
+// Create post
+router.post("/", auth, upload.single("file"), postController.createPost);
 
-// 🔥 FEED (NEW)
-router.get("/feed", auth, getFeed);
+// Get all posts
+router.get("/", postController.getPosts);
 
-// 🔥 SEARCH (NEW)
-router.get("/search", auth, searchPost);
+
+// =========================
+// ❤️ ACTIONS
+// =========================
+
+// Like / Unlike
+router.put("/like/:id", auth, postController.likePost);
+router.put("/unlike/:id", auth, postController.unlikePost);
+
+// Views & Share
+router.post("/view/:id", auth, postController.addView);
+router.post("/share/:id", auth, postController.sharePost);
+
+
+// =========================
+// ✏️ UPDATE / DELETE
+// =========================
+
+// Update post (text or image)
+router.put("/edit/:id", auth, postController.updatePost);
+router.put("/:id", auth, upload.single("image"), postController.updatePost);
+
+// Delete post
+router.delete("/:id", auth, postController.deletePost);
+
+
+// =========================
+// ⚠️ IMPORTANT (LAST)
+// =========================
+
+// Get single post (ALWAYS LAST)
+router.get("/:id", postController.getSinglePost);
+
 
 module.exports = router;

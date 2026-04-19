@@ -1,23 +1,47 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const commentSchema = new mongoose.Schema(
 {
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
+    required: true
   },
+
+  // 🔥 VIDEO SUPPORT
+  video: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Video"
+  },
+
+  // 🔥 POST SUPPORT (old system safe रहेगा)
   post: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Post",
-    required: true,
+    ref: "Post"
   },
+
   text: {
     type: String,
-    required: true,
+    required: true
   },
+
+  // 🔥 LIKE SYSTEM
+  likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }
+  ],
+
+  // 🔥 REPLY SYSTEM
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Comment",
+    default: null
+  }
+
 },
 { timestamps: true }
-);
+)
 
-module.exports = mongoose.model("Comment", commentSchema);
+module.exports = mongoose.model("Comment", commentSchema)

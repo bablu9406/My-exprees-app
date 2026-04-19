@@ -1,81 +1,95 @@
 const mongoose = require("mongoose");
 
-const postSchema = new mongoose.Schema(
-{
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  type: {
-    type: String,
-    enum: ["image", "video", "short"],
-    required: true,
-  },
+const postSchema = new mongoose.Schema({
 
-  // OLD FEATURE (Instagram Style) – SAFE
-  caption: {
-    type: String,
-    default: "",
-  },
-type: {
-  type: String,
-  enum: ["image", "video", "short"],
-  default: "image"
-},
+ user:{
+  type:mongoose.Schema.Types.ObjectId,
+  ref:"User",
+  required:true
+ },
 
-  image: {
-    type: String,
-    default: "",
-  },
+ caption:{
+  type:String,
+  default:""
+ },
 
-  // 🔥 NEW YOUTUBE FEATURE
-  title: {
-    type: String,
-    default: "",
-  },
+ title:{
+  type:String,
+  default:""
+ },
 
-  description: {
-    type: String,
-    default: "",
-  },
+ image:{
+  type:String,
+  default:""
+ },
 
-  videoUrl: {
-    type: String,
-    default: "",
-  },
- mediaUrl: {
-    type: String,
-    default: "",
-  },
+ videoUrl:{
+  type:String,
+  default:""
+ },
 
-  thumbnail: {
-    type: String,
-    default: "",
-  },
+ mediaUrl:{
+  type:String,
+  default:""
+ },
 
-  views: {
-    type: Number,
-    default: 0,
-  },
- duration: {
-    type: Number,
-    default: 0,
-  },
+ type:{
+  type:String,
+  enum:["image","video","short"],
+  default:"image"
+ },
 
-  // Likes
-  likes: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
-comments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
-},
-{ timestamps: true });
+ duration:{
+  type:Number,
+  default:0
+ },
 
-module.exports = mongoose.model("Post", postSchema);
+ views:{
+  type:Number,
+  default:0
+ },
+
+ likes:[
+  {
+   type:mongoose.Schema.Types.ObjectId,
+   ref:"User"
+  }
+ ],
+
+ savedBy:[
+  {
+   type:mongoose.Schema.Types.ObjectId,
+   ref:"User"
+  }
+ ],
+
+ shares:{
+  type:Number,
+  default:0
+ },
+
+ hashtags:[
+  {
+   type:String
+  }
+ ],
+
+ comments:[
+  {
+   type:mongoose.Schema.Types.ObjectId,
+   ref:"Comment"
+  }
+ ],
+
+ viralScore:{
+  type:Number,
+  default:0
+ }
+
+},{
+ timestamps:true
+});
+
+module.exports =
+  mongoose.models.Post ||
+  mongoose.model("Post", postSchema);
