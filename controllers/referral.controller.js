@@ -1,5 +1,5 @@
 const Referral = require("../models/Referral");
-const User = require("../models/user");
+const User = require("../models/User");
 
 // ✅ GENERATE REFERRAL CODE
 exports.generateReferralCode = async (req, res) => {
