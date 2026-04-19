@@ -1,4 +1,4 @@
-const Video = require("../models/Video")
+const Video = require("../models/video")
 const Notification = require("../models/Notification")
 const User = require("../models/User")
 const { io } = require("../server")
