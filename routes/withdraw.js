@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const Withdraw = require("../models/withdraw");
+// ✅ सही
+const Withdraw = require("../models/Withdraw")
 const Wallet = require("../models/wallet");
 const History = require("../models/history");
 
